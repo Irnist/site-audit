@@ -18,6 +18,7 @@ import puppeteer from 'puppeteer-core';
 import * as chromeLauncher from 'chrome-launcher';
 import { audit } from './lib/audit.mjs';
 import { renderReport } from './lib/report.mjs';
+import { AREAS } from './lib/findings.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -56,6 +57,36 @@ export async function writePdf(htmlPath, pdfPath) {
   }
 }
 
+export const normalizeUrl = (s) => (/^https?:\/\//i.test(s.trim()) ? s.trim() : `https://${s.trim()}`);
+
+// Audit a site and write report.html, report.pdf and summary.json (what the app's report list shows)
+export async function runAudit({ url, pages = 10, lighthouse = 2, brand = join(HERE, 'brand.json'), out = null, pdf = true, json = false }, log = () => {}) {
+  const brandData = JSON.parse(readFileSync(brand, 'utf8'));
+  const data = await audit(url, { maxPages: pages, lighthousePages: lighthouse, log });
+
+  log('Writing the report');
+  const dir = out ?? join(HERE, 'reports', `${data.host}-${data.started.slice(0, 10)}`);
+  mkdirSync(dir, { recursive: true });
+  const html = join(dir, 'report.html');
+  writeFileSync(html, renderReport(data, brandData));
+  if (json) writeFileSync(join(dir, 'data.json'), JSON.stringify({ ...data, shots: undefined }, null, 2));
+  if (pdf) {
+    log('Writing the PDF');
+    await writePdf(html, join(dir, 'report.pdf'));
+  }
+
+  const f = data.findings;
+  const n = (s) => f.issues.filter((i) => i.severity === s).length;
+  const summary = {
+    url: data.url, host: data.host, started: data.started, pages: data.pages.length,
+    score: f.overall, grade: f.grade, counts: { high: n('high'), medium: n('medium'), low: n('low') },
+    pdf, seconds: Math.round((Date.now() - Date.parse(data.started)) / 1000),
+    issues: f.issues.map((i) => ({ severity: i.severity, area: AREAS.find((a) => a.id === i.area)?.name ?? i.area, title: i.title })),
+  };
+  writeFileSync(join(dir, 'summary.json'), JSON.stringify(summary, null, 2));
+  return { data, dir, html, pdf: pdf ? join(dir, 'report.pdf') : null, summary };
+}
+
 async function main() {
   let opts;
   try {
@@ -68,30 +99,16 @@ async function main() {
     console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 14).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
     process.exit(opts.help ? 0 : 2);
   }
-  const url = /^https?:\/\//i.test(opts.url) ? opts.url : `https://${opts.url}`;
+  const url = normalizeUrl(opts.url);
   try { new URL(url); } catch { console.error(`not a web address: ${opts.url}`); process.exit(2); }
-  const brand = JSON.parse(readFileSync(opts.brand, 'utf8'));
 
   console.log(`Auditing ${url}`);
-  const data = await audit(url, { maxPages: opts.pages, lighthousePages: opts.lighthouse, log: (m) => console.log(m) });
-
-  const day = data.started.slice(0, 10);
-  const out = opts.out ?? join(HERE, 'reports', `${data.host}-${day}`);
-  mkdirSync(out, { recursive: true });
-  const html = join(out, 'report.html');
-  writeFileSync(html, renderReport(data, brand));
-  if (opts.json) writeFileSync(join(out, 'data.json'), JSON.stringify({ ...data, shots: undefined }, null, 2));
-  if (opts.pdf) {
-    console.log('Writing the PDF');
-    await writePdf(html, join(out, 'report.pdf'));
-  }
-
-  const f = data.findings;
-  const n = (s) => f.issues.filter((i) => i.severity === s).length;
-  console.log(`\nScore ${f.overall}/100 (grade ${f.grade}): ${n('high')} to fix first, ${n('medium')} to fix soon, ${n('low')} nice to have`);
-  for (const i of f.issues) console.log(`  [${i.severity}] ${i.title}`);
-  console.log(`\nReport: ${html}${opts.pdf ? `\nPDF:    ${join(out, 'report.pdf')}` : ''}`);
-  console.log(`Done in ${Math.round((Date.now() - Date.parse(data.started)) / 1000)} s`);
+  const r = await runAudit({ ...opts, url }, (m) => console.log(m));
+  const { summary: s, data } = r;
+  console.log(`\nScore ${s.score}/100 (grade ${s.grade}): ${s.counts.high} to fix first, ${s.counts.medium} to fix soon, ${s.counts.low} nice to have`);
+  for (const i of data.findings.issues) console.log(`  [${i.severity}] ${i.title}`);
+  console.log(`\nReport: ${r.html}${r.pdf ? `\nPDF:    ${r.pdf}` : ''}`);
+  console.log(`Done in ${s.seconds} s`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -1,10 +1,6 @@
 # site-audit
 
-Audit a small-business website in one command and get a report the owner can actually read.
-
-```
-node audit.mjs example.com
-```
+Audit a small-business website from a small app (or one command) and get a report the owner can actually read.
 
 It crawls the site like a visitor would, on a desktop and on a phone, runs Google Lighthouse, and checks the things that cost a local business calls and customers: slow pages, layouts that break on phones, phone numbers you can't tap, pages Google can't list, broken links and forms that never arrive. The result is a branded, single-file HTML report plus a print-ready PDF that explains **what's wrong, why it matters and how to fix it**, in plain words, ranked by what to fix first.
 
@@ -17,7 +13,7 @@ See the full [sample report (PDF)](examples/sample-report.pdf), made from a fict
 | Area | Checks |
 |---|---|
 | **Speed** | Lighthouse performance on a phone with slow 4G: how long the main content takes to appear (LCP), layout shift (CLS), frozen time (TBT), page weight and the biggest savings |
-| **Phones** | Viewport tag, pages wider than the screen (whether they scroll sideways or get cut off), tap-to-call phone numbers, tap target size |
+| **Phones** | Viewport tag, pages wider than the screen and the elements that stick out, tap-to-call phone numbers, tap target size |
 | **Google search** | `noindex` tags and headers, robots.txt blocking the site, missing, duplicate or overlong titles, missing or duplicate descriptions, H1 headings, LocalBusiness structured data, sitemap, share image, plus Lighthouse SEO |
 | **Accessibility** | Images without alt text, page language, plus Lighthouse accessibility (contrast, unlabeled buttons, links and form fields…) |
 | **Trust & contact** | HTTPS and the http→https redirect, insecure files, broken links (internal and external) and images, a way to get in touch, `mailto:` forms, an outdated © year, favicon, script errors |
@@ -28,8 +24,19 @@ Each finding comes with a severity (**Fix first**, **Fix soon**, **Nice to have*
 
 Needs Node 20+ and Google Chrome.
 
+### The app
+
+On Windows, double-click **`Site Audit.cmd`** (it runs `npm install` the first time). Anywhere else, run `npm install`, then `npm run app`.
+
+It opens in its own window. Enter the address, choose how many pages to check and whether to run Lighthouse and make a PDF, and press **Run audit**. You can follow each step as it runs, cancel it, and then see the grade and the top things to fix, with buttons to open the report, the PDF or the folder. Past reports are listed beside the form, and **Branding** edits your name, contact details and closing note.
+
+![The app after an audit, with the grade, the top things to fix and past reports](docs/app.png)
+
+The app is a small local web server (`app.mjs`, on 127.0.0.1 only) showing its page in a Chrome app window. It closes itself once its window has been closed for a while.
+
+### The command line
+
 ```
-npm install
 node audit.mjs https://example.com
 ```
 
@@ -46,7 +53,7 @@ A 10-page audit takes two to four minutes, most of it Lighthouse. Reports go to 
 
 ### Your own branding
 
-Edit `brand.json`:
+Use **Branding** in the app, or edit `brand.json`:
 
 ```json
 {

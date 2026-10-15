@@ -5,6 +5,7 @@
   "type": "module",
   "bin": { "site-audit": "audit.mjs" },
   "scripts": {
+    "app": "node app.mjs",
     "audit": "node audit.mjs",
     "test": "node test/run.mjs"
   },

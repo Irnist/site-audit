@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Site Audit</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231C1C1D'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23F2963A' stroke-width='3.5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/ui/app.css">
+<script src="/ui/app.js" defer></script>
+</head>
+<body>
+<header class="bar">
+  <div class="brand">
+    <span class="mono" id="mono">EB</span>
+    <span class="name">Site Audit</span>
+  </div>
+  <button class="btn on-night" id="open-brand" type="button">Branding</button>
+</header>
+
+<p class="offline" id="offline" hidden>The app has stopped. Close this window and open Site Audit again.</p>
+
+<main class="layout">
+  <section class="panel" id="panel" aria-live="polite">
+
+    <!-- Start -->
+    <div class="view" id="view-form">
+      <h1>Check a website</h1>
+      <p class="lede">Get a plain-language report on a site's speed, phone layout, Google search, accessibility and trust, ready to send to the owner.</p>
+      <form id="run-form" novalidate>
+        <label class="field-label" for="url">Website address</label>
+        <div class="url-row">
+          <input id="url" name="url" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="example.com">
+          <button class="btn primary" type="submit">Run audit</button>
+        </div>
+        <p class="error" id="form-error" role="alert" hidden></p>
+        <p class="note" id="form-note" hidden></p>
+        <div class="options">
+          <div>
+            <label class="field-label" for="pages">Pages to check</label>
+            <select id="pages" name="pages">
+              <option value="5">5 pages</option>
+              <option value="10" selected>10 pages</option>
+              <option value="20">20 pages</option>
+              <option value="30">30 pages</option>
+              <option value="50">50 pages</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label" for="lighthouse">Google Lighthouse</label>
+            <select id="lighthouse" name="lighthouse">
+              <option value="0">Off</option>
+              <option value="1">1 page</option>
+              <option value="2" selected>2 pages</option>
+              <option value="3">3 pages</option>
+            </select>
+          </div>
+          <label class="check"><input type="checkbox" id="pdf" name="pdf" checked> Make a PDF too</label>
+        </div>
+        <p class="hint">An audit usually takes 1 to 3 minutes. More pages and Lighthouse runs take longer.</p>
+      </form>
+      <section class="covers" aria-labelledby="covers-title">
+        <h2 id="covers-title">What the report covers</h2>
+        <dl>
+          <div><dt>Speed</dt><dd>How fast the site loads on a phone, measured by Google's own test.</dd></div>
+          <div><dt>Phones</dt><dd>Whether pages fit the screen, numbers are tap-to-call and buttons are easy to tap.</dd></div>
+          <div><dt>Google search</dt><dd>Titles, descriptions, headings, sitemap, share previews and local business details.</dd></div>
+          <div><dt>Accessibility</dt><dd>Image descriptions, readable contrast, form labels and page language.</dd></div>
+          <div><dt>Trust &amp; contact</dt><dd>Broken links and images, HTTPS, ways to get in touch and an up-to-date footer.</dd></div>
+        </dl>
+      </section>
+    </div>
+
+    <!-- Running -->
+    <div class="view" id="view-run" hidden>
+      <h1 class="host" id="run-host"></h1>
+      <p class="meta"><span id="elapsed">0:00</span> so far</p>
+      <div class="progress" role="progressbar" aria-label="Audit progress" aria-valuemin="0" aria-valuemax="100" id="progress"><div class="progress-fill" id="progress-fill"></div></div>
+      <ol class="steps" id="steps">
+        <li data-step="site"><span class="dot" aria-hidden="true"></span><div><strong>Site-wide checks</strong><span class="detail">HTTPS, robots.txt and sitemap</span></div></li>
+        <li data-step="crawl"><span class="dot" aria-hidden="true"></span><div><strong>Reading pages</strong><span class="detail"></span></div></li>
+        <li data-step="links"><span class="dot" aria-hidden="true"></span><div><strong>Testing links and images</strong><span class="detail"></span></div></li>
+        <li data-step="lh"><span class="dot" aria-hidden="true"></span><div><strong>Google Lighthouse</strong><span class="detail">Speed, accessibility and SEO on a simulated phone</span></div></li>
+        <li data-step="report"><span class="dot" aria-hidden="true"></span><div><strong>Writing the report</strong><span class="detail"></span></div></li>
+        <li data-step="pdf"><span class="dot" aria-hidden="true"></span><div><strong>Making the PDF</strong><span class="detail"></span></div></li>
+      </ol>
+      <div class="run-foot">
+        <details class="log"><summary>Show details</summary><pre id="log"></pre></details>
+        <button class="btn ghost" id="cancel" type="button">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Finished -->
+    <div class="view" id="view-done" hidden>
+      <div class="result">
+        <div class="ring-wrap" id="done-ring"></div>
+        <div>
+          <h1 class="host" id="done-host"></h1>
+          <p class="summary" id="done-summary"></p>
+          <p class="meta" id="done-meta"></p>
+          <div class="actions">
+            <button class="btn primary" type="button" data-open="report">Open report</button>
+            <button class="btn" type="button" data-open="pdf" id="done-pdf">Open PDF</button>
+            <button class="btn ghost" type="button" data-open="folder">Show in folder</button>
+          </div>
+        </div>
+      </div>
+      <section class="top" id="done-top" aria-labelledby="top-title">
+        <h2 id="top-title">Top things to fix</h2>
+        <ol class="top-list" id="done-list"></ol>
+        <p class="more" id="done-more"></p>
+      </section>
+      <button class="text-btn" type="button" id="again">Check another website</button>
+    </div>
+
+    <!-- Failed -->
+    <div class="view" id="view-failed" hidden>
+      <h1>The audit didn't finish</h1>
+      <p class="error-box" id="fail-message"></p>
+      <details class="log"><summary>Show details</summary><pre id="fail-log"></pre></details>
+      <div class="actions">
+        <button class="btn primary" type="button" id="retry">Try again</button>
+        <button class="text-btn" type="button" id="fail-back">Check a different website</button>
+      </div>
+    </div>
+  </section>
+
+  <aside class="history" aria-labelledby="history-title">
+    <h2 id="history-title">Past reports</h2>
+    <ul class="reports" id="reports"></ul>
+    <p class="empty" id="reports-empty" hidden>No reports yet. Finished audits show up here.</p>
+  </aside>
+</main>
+
+<dialog class="brand-dialog" id="brand-dialog" aria-labelledby="brand-title">
+  <form id="brand-form" method="dialog">
+    <h2 id="brand-title">Branding</h2>
+    <p class="lede small">Your name and contact details on the report's cover and closing note. New reports use these.</p>
+    <div class="grid2">
+      <label><span class="field-label">Your name</span><input name="name" required></label>
+      <label><span class="field-label">Initials (up to 3)</span><input name="monogram" maxlength="3"></label>
+      <label class="span2"><span class="field-label">What you do</span><input name="role"></label>
+      <label><span class="field-label">Website</span><input name="website" type="url"></label>
+      <label><span class="field-label">Email</span><input name="email" type="email"></label>
+      <label class="span2 color-row"><span class="field-label">Accent colour</span>
+        <span class="color-pair"><input type="color" id="accent-picker" aria-label="Pick the accent colour"><input name="accent" id="accent" pattern="#[0-9a-fA-F]{6}" spellcheck="false"></span>
+      </label>
+      <label class="span2"><span class="field-label">Closing heading</span><input name="ctaTitle"></label>
+      <label class="span2"><span class="field-label">Closing message</span><textarea name="ctaText" rows="4"></textarea></label>
+    </div>
+    <p class="error" id="brand-error" role="alert" hidden></p>
+    <div class="actions end">
+      <button class="btn ghost" type="button" id="brand-cancel">Cancel</button>
+      <button class="btn primary" type="submit">Save</button>
+    </div>
+  </form>
+</dialog>
+</body>
+</html>
