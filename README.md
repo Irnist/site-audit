@@ -1,4 +1,4 @@
-# site-audit
+# Site-Audit
 
 Audit a small-business website from a small app (or one command) and get a report the owner can actually read.
 
