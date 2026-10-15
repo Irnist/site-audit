@@ -1,0 +1,19 @@
+{
+  "name": "site-audit",
+  "version": "1.0.0",
+  "description": "Audit a small-business website and get a plain-language, client-ready report (HTML + PDF): speed, mobile, local SEO, accessibility, broken links and trust signals.",
+  "type": "module",
+  "bin": { "site-audit": "audit.mjs" },
+  "scripts": {
+    "audit": "node audit.mjs",
+    "test": "node test/run.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "author": "Ernest Mar Banigon (https://ernestbanigon.pages.dev/)",
+  "license": "MIT",
+  "dependencies": {
+    "chrome-launcher": "^1.2.2",
+    "lighthouse": "^13.5.0",
+    "puppeteer-core": "^25.9.0"
+  }
+}

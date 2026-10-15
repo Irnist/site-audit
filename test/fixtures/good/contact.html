@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact Good Example Plumbing</title>
+<meta name="description" content="Book a plumber in Springfield: call (555) 010-4040 or send the form and we reply within one business day.">
+<meta property="og:image" content="https://example.com/share.jpg">
+<link rel="icon" href="/favicon.svg">
+<!-- A hidden, too-wide placeholder clipped by the body (like a page builder's sticky-header spacer): not a finding -->
+<style>body { overflow-x: clip; } .spacer { visibility: hidden; width: 700px; height: 1px; }</style>
+</head>
+<body>
+<header><nav><a href="/">Home</a> <a href="/contact.html">Contact</a> <a href="tel:+15550104040">(555) 010-4040</a></nav></header>
+<div class="spacer"></div>
+<main>
+<h1>Contact us</h1>
+<form action="/thanks" method="post">
+  <label for="n">Name</label> <input id="n" name="name">
+  <label for="m">Message</label> <textarea id="m" name="message"></textarea>
+  <button>Send</button>
+</form>
+</main>
+<footer>© <span id="year">2000</span> Good Example Plumbing</footer>
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
